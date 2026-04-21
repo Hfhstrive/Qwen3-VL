@@ -65,26 +65,28 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: st
 
 
 def set_model(model_args, model):
+    visual = getattr(model, "visual", None) or getattr(model.model, "visual", None)
+    language_model = getattr(model, "language_model", None) or getattr(model.model, "language_model", None)
     if model_args.tune_mm_vision:
-        for n, p in model.visual.named_parameters():
+        for n, p in visual.named_parameters():
             p.requires_grad = True
     else:
-        for n, p in model.visual.named_parameters():
+        for n, p in visual.named_parameters():
             p.requires_grad = False
 
     if model_args.tune_mm_mlp:
-        for n, p in model.visual.merger.named_parameters():
+        for n, p in visual.merger.named_parameters():
             p.requires_grad = True
     else:
-        for n, p in model.visual.merger.named_parameters():
+        for n, p in visual.merger.named_parameters():
             p.requires_grad = False
 
     if model_args.tune_mm_llm:
-        for n, p in model.language_model.named_parameters():
+        for n, p in language_model.named_parameters():
             p.requires_grad = True
         model.lm_head.requires_grad = True
     else:
-        for n, p in model.language_model.named_parameters():
+        for n, p in language_model.named_parameters():
             p.requires_grad = False
         model.lm_head.requires_grad = False
 
@@ -172,6 +174,7 @@ def train(attn_implementation="flash_attention_2"):
             lora_alpha=training_args.lora_alpha or 128,
             lora_dropout=training_args.lora_dropout or 0.05,
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # Qwen 的 attention 线性层
+            # target_modules=["q_proj", "k_proj"],  # Qwen 的 attention 线性层
             bias="none",
             task_type=TaskType.CAUSAL_LM,
         )
@@ -180,9 +183,10 @@ def train(attn_implementation="flash_attention_2"):
         set_model(model_args, model)
 
         if torch.distributed.get_rank() == 0:
-            model.visual.print_trainable_parameters()
+            visual = getattr(model, "visual", None) or getattr(model.model, "visual", None)
+            visual.print_trainable_parameters()
             model.model.print_trainable_parameters()
-    
+
     data_module = make_supervised_data_module(processor, data_args=data_args)
     trainer = Trainer(
         model=model, processing_class=tokenizer, args=training_args, **data_module
@@ -198,7 +202,7 @@ def train(attn_implementation="flash_attention_2"):
     model.config.use_cache = True
 
     safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
-    
+
     processor.save_pretrained(training_args.output_dir)
 
 
