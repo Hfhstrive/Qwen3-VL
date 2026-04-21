@@ -25,7 +25,7 @@ def write_data(file_path, data):
     """Write data to JSON or JSONL file"""
     with open(file_path, 'w') as f:
         if file_path.endswith('.json'):
-            json.dump(data, f, indent=4)
+            json.dump(data, f, indent=4, ensure_ascii=False)
         elif file_path.endswith('.jsonl'):
             for item in data:
                 f.write(json.dumps(item) + '\n')
@@ -64,7 +64,7 @@ class MultimodalProcessor:
         processor = self._configure_processor(self.data_args.max_pixels, self.data_args.min_pixels)
         image = Image.open(image_path).convert('RGB')
         visual_processed = processor.preprocess(images=image, return_tensors='pt')
-        return visual_processed['image_grid_thw'].prod() // 4
+        return (visual_processed['image_grid_thw'].prod() // 4).item()
 
     def process_video(self, video_file):
         video_path = os.path.join(self.data_args.data_path, video_file)
@@ -125,12 +125,12 @@ def pack_data(data_list, pack_length):
 datasets = {
     'dummy_dataset': {
         'data_path': '',
-        'annotation_path': 'path/to/your/annotation.json'
+        'annotation_path': '/media/inno/VLM/D2_images_and_reports_20260402/Qwen3-VL/datasets/V3/all.json'
     }
 }
 
 data_args = DataArguments()
-model_path = 'path/to/your/model'
+model_path = 'Qwen/Qwen3-VL-2B-Instruct'
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 tokenizer.chat_template = "{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
 base_image_processor = Qwen2VLImageProcessor.from_pretrained(model_path)
@@ -167,9 +167,9 @@ for dataset_name, config in datasets.items():
         print(f"Token counts saved to: {count_file_path}")
 
     # Assume the packing length is 4096
-    pack_length = 4096
+    pack_length = 8192
     # Define the batch size
-    batch_size = 256
+    batch_size = 1
     all_packed_results = []
 
     # Record the start time of binpacking
@@ -188,5 +188,5 @@ for dataset_name, config in datasets.items():
     # Save the packed results as a JSON file
     pack_output_path = annotation_path.replace('.jsonl', '_pack.json').replace('.json', '_pack.json')
     with open(pack_output_path, 'w', encoding='utf-8') as file:
-        json.dump(all_packed_results, file, indent=2)
+        json.dump(all_packed_results, file, ensure_ascii=False, indent=2)
     print(f"Packed results saved to: {pack_output_path}")
