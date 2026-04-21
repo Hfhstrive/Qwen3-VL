@@ -1,6 +1,11 @@
 import re
 
 # Define placeholders for dataset paths
+Inno_GI = {
+    "annotation_path": "/media/inno/VLM/D2_images_and_reports_20260402/Qwen3-VL/datasets/V2/all_pack.json",
+    "data_path": "",
+}
+
 CAMBRIAN_737K = {
     "annotation_path": "PATH_TO_CAMBRIAN_737K_ANNOTATION",
     "data_path": "",
@@ -27,6 +32,7 @@ VIDEOCHATGPT = {
 }
 
 data_dict = {
+    "inno_gi": Inno_GI,
     "cambrian_737k": CAMBRIAN_737K,
     "cambrian_737k_pack": CAMBRIAN_737K_PACK,
     "mp_doc": MP_DOC,
