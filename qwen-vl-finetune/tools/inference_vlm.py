@@ -12,10 +12,6 @@ from tqdm import tqdm
 from transformers import AutoModelForImageTextToText, AutoProcessor
 from peft import PeftModel
 
-DEFAULT_VLM = 'Qwen/Qwen3-VL-2B-Instruct'
-# default taken from tools/test.py
-DEFAULT_LORA = '/home/inno/code/VLM/Qwen3-VL/qwen-vl-finetune/output/V2/lora_qwen3_2b_r64_alpha128_dropout0.05_zero2_448_768_freeze_vision-mlp_lr1e-4/checkpoint-320/'
-
 
 def crop_invalid_region(img, padding=[0, 0, 0, 0], padding_dynamic=True, DEBUG=False, ignore_square=False):
     # padding parameters: [x_left_padding, x_right_padding, y_top_padding, y_bottom_padding]
@@ -90,7 +86,6 @@ def crop_invalid_region(img, padding=[0, 0, 0, 0], padding_dynamic=True, DEBUG=F
             cv2.imshow('gray_mask', gray_mask * 255)
             cv2.imshow('enhance_blur', enhance_blur)
             cv2.imshow('mask', mask)
-            # cv2.imshow('stitched', stitched)
             cv2.waitKey(0)
         return img, None
 
@@ -114,8 +109,6 @@ def crop_invalid_region(img, padding=[0, 0, 0, 0], padding_dynamic=True, DEBUG=F
         new_x2 = stitched.shape[1] if (roi_x2 + x_right_padding) > stitched.shape[1] else int(roi_x2 + x_right_padding)
         new_y1 = 0 if (roi_y1 - y_top_padding) < 0 else int(roi_y1 - y_top_padding)
         new_y2 = stitched.shape[0] if (roi_y2 + y_bottom_padding) > stitched.shape[0] else int(roi_y2 + y_bottom_padding)
-        # print('{} {} {} {}'.format(roi_x1, roi_x2, roi_y1, roi_y2))
-        # print('{} {} {} {}'.format(new_x1, new_x2, new_y1, new_y2))
         roi = tuple([new_x1, new_y1, new_x2 - new_x1, new_y2 - new_y1])
     stitched = stitched[roi[1]:roi[1] + roi[3], roi[0]:roi[0] + roi[2]]
     return stitched, roi
@@ -134,7 +127,8 @@ def main(args):
     processor = AutoProcessor.from_pretrained(args.vlm)
 
     # collect image folders under images_root that end with images_crop
-    all_images = glob.glob(f'{images_root}/**/images_crop/*', recursive=True)
+    dir_name = 'images' if args.crop_ai else 'images_crop'
+    all_images = glob.glob(f'{images_root}/**/{dir_name}/*', recursive=True)
     support_ext = {'.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'}
     images = [p for p in all_images if os.path.splitext(p)[1].lower() in support_ext]
 
@@ -207,9 +201,11 @@ def main(args):
 
 
 if __name__ == '__main__':
+    DEFAULT_VLM = 'Qwen/Qwen3-VL-2B-Instruct'
+    DEFAULT_LORA = '/home/inno/code/VLM/Qwen3-VL/qwen-vl-finetune/output/V2/lora_qwen3_2b_r64_alpha128_dropout0.05_zero2_448_768_freeze_vision-mlp_lr1e-4/checkpoint-320/'
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', type=str, default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/胃镜/', help='根目录，寻找 **/images/*')
-    parser.add_argument('--output', type=str, default='media/inno/output/VLM/D1_images_and_reports_which_have_video_20250316/胃镜/', help='输出目录')
+    parser.add_argument('--output', type=str, default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/generated_llm/', help='输出目录')
     parser.add_argument('--vlm', type=str, default=DEFAULT_VLM, help='视觉语言模型名或路径')
     parser.add_argument('--lora', type=str, default=DEFAULT_LORA, help='lora adapter 路径')
     parser.add_argument('--crop_ai', action='store_true')
