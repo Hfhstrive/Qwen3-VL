@@ -309,13 +309,22 @@ def merge_det_vlm(img_path, imgs, det_data, vlm_data):
             if len(det_entry['检测']) != 0:
                 det_flag = True
                 det_scribe += generate_det_description(det_entry['检测'])
-            assert not (len(det_entry['ipcl']) != 0 and len(det_entry['萎缩']) != 0)
-            if len(det_entry['ipcl']) != 0:
-                det_flag = True
-                det_scribe += f"IPCL呈{det_entry['ipcl']}型。"
-            if len(det_entry['萎缩']) != 0:
-                det_flag = True
-                det_scribe += f"背景黏膜存在萎缩。"
+            # 当IPCL和萎缩一起出现时，以部位判断
+            # assert not (len(det_entry['ipcl']) != 0 and len(det_entry['萎缩']) != 0)
+            if len(det_entry['ipcl']) != 0 and len(det_entry['萎缩']) != 0:
+                if '食管' in loc:
+                    det_flag = True
+                    det_scribe += f"IPCL呈{det_entry['ipcl']}型。"
+                else:
+                    det_flag = True
+                    det_scribe += f"背景黏膜存在萎缩。"
+            else:
+                if len(det_entry['ipcl']) != 0:
+                    det_flag = True
+                    det_scribe += f"IPCL呈{det_entry['ipcl']}型。"
+                if len(det_entry['萎缩']) != 0:
+                    det_flag = True
+                    det_scribe += f"背景黏膜存在萎缩。"
 
         if vlm_entry is not None:
             des_idx = 0
@@ -428,7 +437,7 @@ def main(args):
 
         status = 'train' if id <= 0.9 * len(os.listdir(case_path)) else 'test'
         save_path = os.path.join(save_dir, status + '.jsonl')
-        with open(save_path, 'w', encoding='utf-8') as f:
+        with open(save_path, 'a+', encoding='utf-8') as f:
             f.write(json.dumps(messages, ensure_ascii=False) + '\n')
 
 
