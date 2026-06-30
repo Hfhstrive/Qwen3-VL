@@ -456,13 +456,13 @@ if __name__ == '__main__':
                         default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/胃镜/',
                         help='原始数据根路径')
     parser.add_argument('--det_path', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/det/胃镜_V4.json',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/det/胃镜_V3.json',
                         help='检测结果文件')
     parser.add_argument('--vlm_path', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/generated_llm/vlm_describe_v4.json',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/generated_llm/vlm_describe.json',
                         help='VLM描述文件')
     parser.add_argument('--save_dir', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/MedicalGPT/V4/',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/MedicalGPT/V3/',
                         help='输出保存目录')
     parser.add_argument('--hash_threshold', type=int, default=5, help='均值哈希汉明距离阈值')
     parser.add_argument('--group_images', type=int, default=5, help='每个部位最多保留的图像数')
