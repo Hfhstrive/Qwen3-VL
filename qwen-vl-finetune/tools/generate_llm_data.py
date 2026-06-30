@@ -362,6 +362,7 @@ def main(args):
     det_path = args.det_path
     vlm_path = args.vlm_path
     save_dir = args.save_dir
+    status_case = {}
     os.makedirs(save_dir, exist_ok=True)
 
     # load detection json referenced for det_summary
@@ -436,9 +437,17 @@ def main(args):
                                  {"role": "assistant", "content": assistant_info}]}
 
         status = 'train' if id <= 0.9 * len(os.listdir(case_path)) else 'test'
+        if status not in status_case:
+            status_case.update({
+                status: []
+            })
+        status_case[status].append(case)
         save_path = os.path.join(save_dir, status + '.jsonl')
         with open(save_path, 'a+', encoding='utf-8') as f:
             f.write(json.dumps(messages, ensure_ascii=False) + '\n')
+
+    with open(os.path.join(save_dir, 'status.json'), 'w', encoding='utf-8') as f:
+        json.dump(status_case, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':
@@ -447,13 +456,13 @@ if __name__ == '__main__':
                         default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/胃镜/',
                         help='原始数据根路径')
     parser.add_argument('--det_path', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/det/胃镜_V3.json',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/det/胃镜_V4.json',
                         help='检测结果文件')
     parser.add_argument('--vlm_path', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/generated_llm/vlm_describe.json',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/base/generated_llm/vlm_describe_v4.json',
                         help='VLM描述文件')
     parser.add_argument('--save_dir', type=str,
-                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/MedicalGPT/V3/',
+                        default='/media/inno/VLM/D1_images_and_reports_which_have_video_20250316/MedicalGPT/V4/',
                         help='输出保存目录')
     parser.add_argument('--hash_threshold', type=int, default=5, help='均值哈希汉明距离阈值')
     parser.add_argument('--group_images', type=int, default=5, help='每个部位最多保留的图像数')
